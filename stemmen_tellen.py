@@ -3,7 +3,6 @@ from tijdloze100_types import *
 import csv
 import re
 
-
 def bereken_top100(stemmenlijst: Stemmenlijst) -> Editie:
     """
     Berekent de top 100 nummers uit een lijst van stemmen zonder gebruik van .timestamp of datetime.strptime.
@@ -18,9 +17,7 @@ def bereken_top100(stemmenlijst: Stemmenlijst) -> Editie:
 
     for stem in stemmenlijst:
         nummer = stem.nummer
-        stemtijd = (
-            stem.tijd
-        )  # Veronderstel dat `stem.tijd` een string is zoals "2023-01-26 14:00:00"
+        stemtijd = stem.tijd  # Veronderstel dat `stem.tijd` een string is zoals "2023-01-26 14:00:00"
         if nummer not in stemmen_telling:
             stemmen_telling[nummer] = [0, None]
         stemmen_telling[nummer][0] += 1
@@ -32,11 +29,11 @@ def bereken_top100(stemmenlijst: Stemmenlijst) -> Editie:
         stemmen_telling.items(),
         key=lambda item: (
             -item[1][0],  # Aantal stemmen (aflopend)
-            item[1][1],  # Laatste stemtijd (lexicografisch oplopend)
-            item[0][2],  # Releasejaar (oplopend)
-            item[0][1],  # Titel (alfabetisch)
-            item[0][0],  # Artiest (alfabetisch)
-        ),
+            item[1][1],   # Laatste stemtijd (lexicografisch oplopend)
+            item[0][2],   # Releasejaar (oplopend)
+            item[0][1],   # Titel (alfabetisch)
+            item[0][0]    # Artiest (alfabetisch)
+        )
     )
 
     # Beperk tot de top 100
@@ -45,6 +42,7 @@ def bereken_top100(stemmenlijst: Stemmenlijst) -> Editie:
         top100.append((nummer[0], nummer[1], nummer[2], stemmen[0]))
 
     return top100
+
 
 
 def maak_stemmenlijst(pad_naar_bestand_met_stemmen: str) -> Stemmenlijst:
@@ -60,8 +58,8 @@ def maak_stemmenlijst(pad_naar_bestand_met_stemmen: str) -> Stemmenlijst:
     stemmenlijst = []
 
     try:
-        with open(pad_naar_bestand_met_stemmen, mode="r", encoding="utf-8") as csv_file:
-            reader = csv.reader(csv_file, delimiter=";")
+        with open(pad_naar_bestand_met_stemmen, mode='r', encoding='utf-8') as csv_file:
+            reader = csv.reader(csv_file, delimiter=';')
             for regel in reader:
                 if len(regel) != 6:
                     # Sla regels over die niet het juiste aantal velden hebben
@@ -74,18 +72,18 @@ def maak_stemmenlijst(pad_naar_bestand_met_stemmen: str) -> Stemmenlijst:
                     nummer=(artiest, titel, int(release_jaar)),
                     naam_van_stemmer=naam_stemmer,
                     email=email_stemmer,
-                    tijd=tijd,  # Gebruik tijd als een string
+                    tijd=tijd  # Gebruik tijd als een string
                 )
                 stemmenlijst.append(stem)
 
     except FileNotFoundError:
-        print(
-            f"Fout: Het bestand '{pad_naar_bestand_met_stemmen}' kon niet worden gevonden."
-        )
+        print(f"Fout: Het bestand '{pad_naar_bestand_met_stemmen}' kon niet worden gevonden.")
     except Exception as e:
         print(f"Fout tijdens het verwerken van het bestand: {e}")
 
     return stemmenlijst
+
+
 
 
 def filter_email(stemmenlijst: Stemmenlijst) -> Stemmenlijst:
@@ -98,15 +96,11 @@ def filter_email(stemmenlijst: Stemmenlijst) -> Stemmenlijst:
     Returns:
         Stemmenlijst: Gefilterde lijst met enkel geldige e-mailadressen.
     """
-
     def is_geldig_email(email: str) -> bool:
-        email_regex = re.compile(
-            r"^[a-zA-Z0-9._-]+(\.[a-zA-Z0-9._-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$"
-        )
+        email_regex = re.compile(r'^[a-zA-Z0-9._-]+(\.[a-zA-Z0-9._-]+)*@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z]{2,}$')
         return bool(email_regex.match(email))
 
     return [stem for stem in stemmenlijst if is_geldig_email(stem.email)]
-
 
 def filter_laatste_stem(stemmenlijst: Stemmenlijst) -> Stemmenlijst:
     """
@@ -122,9 +116,7 @@ def filter_laatste_stem(stemmenlijst: Stemmenlijst) -> Stemmenlijst:
 
     for stem in stemmenlijst:
         email = stem.email
-        tijd = (
-            stem.tijd
-        )  # Veronderstel dat 'tijd' een string is in het formaat "YYYY-MM-DD HH:MM:SS"
+        tijd = stem.tijd  # Veronderstel dat 'tijd' een string is in het formaat "YYYY-MM-DD HH:MM:SS"
         if email not in laatste_stemmen or tijd > laatste_stemmen[email].tijd:
             laatste_stemmen[email] = stem
 
@@ -142,10 +134,10 @@ def filter_domein(stemmenlijst: Stemmenlijst, domein: str) -> Stemmenlijst:
     Returns:
         Stemmenlijst: Gefilterde lijst zonder stemmen van het opgegeven domein.
     """
-
     def heeft_domein(email: str, domein: str) -> bool:
         # Controleer of het e-mailadres eindigt op "@" gevolgd door het domein
         at_domein = f"@{domein}"
-        return len(email) >= len(at_domein) and email[-len(at_domein) :] == at_domein
+        return len(email) >= len(at_domein) and email[-len(at_domein):] == at_domein
 
     return [stem for stem in stemmenlijst if not heeft_domein(stem.email, domein)]
+
